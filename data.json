@@ -27,16 +27,19 @@
     {
       "id": 1,
       "name": "Morning Run",
+      "icon": "ri-run-line",
       "status": true
     },
     {
       "id": 2,
       "name": "Read 30 mins",
+      "icon": "ri-book-read-line",
       "status": false
     },
     {
       "id": 3,
       "name": "Meditation",
+      "icon": "ri-mental-health-line",
       "status": true
     }
   ]
