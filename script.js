@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHabitsPage();
     } else if (path.includes('library.html')) {
         loadLibraryPage();
+    } else if (path.includes('settings.html')) {
+        loadSettingsPage();
     } else {
         // Default dashboard fetch
         loadDashboard();
@@ -541,4 +543,103 @@ function setupLibraryFilters(allItems) {
             }
         });
     });
+}
+
+// Settings Page Logic
+function loadSettingsPage() {
+    const exportBtn = document.getElementById('export-btn');
+    const importBtn = document.getElementById('import-btn');
+    const importInput = document.getElementById('import-input');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // Export Logic
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const backupData = {};
+
+            // Collect User Transactions
+            const transactions = localStorage.getItem('user_transactions');
+            if (transactions) {
+                backupData.user_transactions = JSON.parse(transactions);
+            }
+
+            // Collect Quick Note
+            const note = localStorage.getItem('quick_note');
+            if (note) {
+                backupData.quick_note = note;
+            }
+
+            // Collect Habit States
+            const habitKeys = Object.keys(localStorage).filter(key => key.startsWith('habit_'));
+            habitKeys.forEach(key => {
+                backupData[key] = localStorage.getItem(key);
+            });
+
+            // Create Download
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lifestream_backup.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    // Import Logic
+    if (importBtn && importInput) {
+        importBtn.addEventListener('click', () => {
+            importInput.click();
+        });
+
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+
+                    // Restore Data
+                    if (data.user_transactions) {
+                        localStorage.setItem('user_transactions', JSON.stringify(data.user_transactions));
+                    }
+                    if (data.quick_note) {
+                        localStorage.setItem('quick_note', data.quick_note);
+                    }
+
+                    // Restore Habits
+                    Object.keys(data).forEach(key => {
+                        if (key.startsWith('habit_')) {
+                            localStorage.setItem(key, data[key]);
+                        }
+                    });
+
+                    alert('Data Restored Successfully!');
+                    location.reload();
+
+                } catch (err) {
+                    console.error('Error parsing backup file:', err);
+                    alert('Failed to restore data. Invalid file.');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    // Reset Logic
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (confirm("Are you sure? This will wipe all your data permanently.")) {
+                localStorage.clear();
+                alert('App Reset. All local data cleared.');
+                location.reload();
+            }
+        });
+    }
 }

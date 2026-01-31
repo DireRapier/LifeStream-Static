@@ -11,10 +11,35 @@
     <div class="dashboard-layout">
         <aside id="sidebar-container"></aside>
         <main class="content">
-            <div class="container placeholder-container">
-                <i class="ri-settings-4-line placeholder-icon"></i>
-                <h1>Settings</h1>
-                <p class="text-muted mt-4">User preferences coming soon.</p>
+            <div class="container">
+                <header class="hero">
+                    <h1>Settings</h1>
+                    <p class="text-muted mt-2">Manage your data and preferences.</p>
+                </header>
+
+                <div class="grid-container">
+                    <div class="card">
+                        <h2><i class="ri-database-2-line align-middle mr-2"></i>Data Management</h2>
+                        <p class="text-muted mb-4">Your data is stored locally in your browser. You can export it for backup or restore it later.</p>
+
+                        <div class="settings-actions">
+                            <button id="export-btn" class="btn-primary w-full mb-4">
+                                <i class="ri-download-cloud-line"></i> Download Backup
+                            </button>
+
+                            <button id="import-btn" class="btn-secondary w-full mb-4">
+                                <i class="ri-upload-cloud-line"></i> Restore Backup
+                            </button>
+                            <input type="file" id="import-input" accept=".json" class="hidden">
+
+                            <hr class="divider">
+
+                            <button id="reset-btn" class="btn-danger w-full">
+                                <i class="ri-delete-bin-line"></i> Reset Everything
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <footer>
