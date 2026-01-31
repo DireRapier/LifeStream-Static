@@ -213,8 +213,69 @@ ul {
   color: var(--accent-color);
 }
 
+/* Finance Page Styles */
+.finance-summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.burn-amount {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-color); /* Could be red if needed, but white is cleaner */
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.transaction-table th {
+  text-align: left;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Lighter/Transparent White */
+  vertical-align: middle;
+}
+
+.transaction-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Typography & Badges */
+.amount-cell {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
 /* Utility Classes */
 .text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
 .text-muted { color: var(--text-muted); }
 .text-danger { color: var(--text-danger); }
 .text-success { color: var(--text-success); }

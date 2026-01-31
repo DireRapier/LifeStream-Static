@@ -11,10 +11,44 @@
     <div class="dashboard-layout">
         <aside id="sidebar-container"></aside>
         <main class="content">
-            <div class="container placeholder-container">
-                <i class="ri-money-dollar-circle-line placeholder-icon"></i>
-                <h1>Finance Dashboard</h1>
-                <p class="text-muted mt-4">Detailed financial tracking coming soon.</p>
+            <div class="container">
+                <header class="hero">
+                    <h1>Finance Dashboard</h1>
+                    <p class="text-muted mt-2">Track your monthly expenses.</p>
+                </header>
+
+                <div class="grid-container" style="margin-bottom: 2rem;">
+                    <!-- Section A: Summary Card -->
+                    <div class="card">
+                        <h2><i class="ri-fire-line align-middle mr-2"></i>Total Monthly Burn</h2>
+                        <div class="finance-summary">
+                            <span id="total-burn" class="burn-amount">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section B: Transaction List -->
+                <div class="card">
+                    <h2><i class="ri-list-check align-middle mr-2"></i>Recent Transactions</h2>
+                    <div class="table-container">
+                        <table class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;"></th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th class="text-right">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-list">
+                                <!-- Dynamic Rows will be inserted here -->
+                                <tr>
+                                    <td colspan="4" class="text-muted text-center p-4">Loading transactions...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <footer>
