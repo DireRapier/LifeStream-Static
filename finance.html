@@ -29,7 +29,12 @@
 
                 <!-- Section B: Transaction List -->
                 <div class="card">
-                    <h2><i class="ri-list-check align-middle mr-2"></i>Recent Transactions</h2>
+                    <div class="flex-between mb-4">
+                        <h2><i class="ri-list-check align-middle mr-2"></i>Recent Transactions</h2>
+                        <button id="add-transaction-btn" class="btn-primary">
+                            <i class="ri-add-line"></i> New Transaction
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table class="transaction-table">
                             <thead>
@@ -56,6 +61,37 @@
             </footer>
         </main>
     </div>
+
+    <!-- Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Transaction</h3>
+                <button id="close-modal-btn" class="close-btn">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="add-transaction-form">
+                <div class="form-group">
+                    <label for="transaction-name">Name</label>
+                    <input type="text" id="transaction-name" name="name" placeholder="e.g. Netflix" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount">Amount</label>
+                    <input type="number" id="transaction-amount" name="amount" placeholder="0.00" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-type">Type</label>
+                    <select id="transaction-type" name="type">
+                        <option value="Expense">Expense</option>
+                        <option value="Income">Income</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-full mt-4">Add Transaction</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

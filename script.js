@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
     if (path.includes('finance.html')) {
         loadFinancePage();
+        setupFinanceModal();
     } else if (path.includes('habits.html')) {
         loadHabitsPage();
     } else {
@@ -171,20 +172,39 @@ async function loadFinancePage() {
         }
         const data = await response.json();
 
+        let allTransactions = [];
+
         if (data.finance) {
-            const expenses = data.finance.filter(item => item.type.toLowerCase() === 'expense');
-            const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
-
-            const burnElement = document.getElementById('total-burn');
-            if (burnElement) {
-                burnElement.textContent = new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(totalBurn);
-            }
-
-            renderTransactionList(data.finance);
+            allTransactions = [...data.finance];
         }
+
+        // Merge with LocalStorage transactions
+        const localTransactionsStr = localStorage.getItem('user_transactions');
+        if (localTransactionsStr) {
+            try {
+                const localTransactions = JSON.parse(localTransactionsStr);
+                if (Array.isArray(localTransactions)) {
+                    allTransactions = [...allTransactions, ...localTransactions];
+                }
+            } catch (e) {
+                console.error("Error parsing user transactions", e);
+            }
+        }
+
+        // 1. Calculate Total Monthly Burn (Expenses only)
+        const expenses = allTransactions.filter(item => item.type.toLowerCase() === 'expense');
+        const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+
+        const burnElement = document.getElementById('total-burn');
+        if (burnElement) {
+            burnElement.textContent = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(totalBurn);
+        }
+
+        // 2. Render Transaction List
+        renderTransactionList(allTransactions);
 
     } catch (error) {
         console.error('Error loading finance data:', error);
@@ -199,13 +219,21 @@ function renderTransactionList(transactions) {
 
     listContainer.innerHTML = '';
 
-    transactions.forEach(item => {
+    // Sort transactions by ID (newest last?) or assuming LocalStorage are newer.
+    // JSON transactions have simple IDs 1, 2, 3.
+    // LocalStorage IDs are Date.now() (larger).
+    // Let's sort descending ID to show newest first? Or just render as is.
+    // Plan didn't specify sort order. Let's keep array order (JSON first, then Local).
+    // Actually newest first is better for "Recent Transactions".
+    // Let's reverse for display.
+    const reversedTransactions = [...transactions].reverse();
+
+    reversedTransactions.forEach(item => {
         const tr = document.createElement('tr');
 
         const iconTd = document.createElement('td');
         const icon = document.createElement('i');
         icon.className = 'ri-money-dollar-circle-line text-lg text-muted';
-        // Removed inline styles here
         iconTd.appendChild(icon);
 
         const nameTd = document.createElement('td');
@@ -241,6 +269,78 @@ function renderTransactionList(transactions) {
 
         listContainer.appendChild(tr);
     });
+}
+
+function setupFinanceModal() {
+    const addBtn = document.getElementById('add-transaction-btn');
+    const modal = document.getElementById('transaction-modal');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const form = document.getElementById('add-transaction-form');
+
+    if (!addBtn || !modal || !closeBtn || !form) return;
+
+    addBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleAddTransaction(form, modal);
+    });
+}
+
+function handleAddTransaction(form, modal) {
+    const nameInput = document.getElementById('transaction-name');
+    const amountInput = document.getElementById('transaction-amount');
+    const typeInput = document.getElementById('transaction-type');
+
+    if (!nameInput || !amountInput || !typeInput) return;
+
+    const name = nameInput.value;
+    const amount = parseFloat(amountInput.value);
+    const type = typeInput.value;
+
+    if (!name || isNaN(amount)) return;
+
+    const newTransaction = {
+        id: Date.now(),
+        name: name,
+        amount: amount,
+        type: type
+    };
+
+    // Save to LocalStorage
+    const localTransactionsStr = localStorage.getItem('user_transactions');
+    let localTransactions = [];
+    if (localTransactionsStr) {
+        try {
+            localTransactions = JSON.parse(localTransactionsStr);
+            if (!Array.isArray(localTransactions)) localTransactions = [];
+        } catch (e) {
+            localTransactions = [];
+        }
+    }
+
+    localTransactions.push(newTransaction);
+    localStorage.setItem('user_transactions', JSON.stringify(localTransactions));
+
+    // Reset and Close
+    form.reset();
+    modal.classList.remove('active');
+
+    // Refresh UI
+    loadFinancePage();
 }
 
 // Habits Page Logic
