@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setupFinanceModal();
     } else if (path.includes('habits.html')) {
         loadHabitsPage();
+    } else if (path.includes('library.html')) {
+        loadLibraryPage();
     } else {
         // Default dashboard fetch
         fetchData();
@@ -219,13 +221,6 @@ function renderTransactionList(transactions) {
 
     listContainer.innerHTML = '';
 
-    // Sort transactions by ID (newest last?) or assuming LocalStorage are newer.
-    // JSON transactions have simple IDs 1, 2, 3.
-    // LocalStorage IDs are Date.now() (larger).
-    // Let's sort descending ID to show newest first? Or just render as is.
-    // Plan didn't specify sort order. Let's keep array order (JSON first, then Local).
-    // Actually newest first is better for "Recent Transactions".
-    // Let's reverse for display.
     const reversedTransactions = [...transactions].reverse();
 
     reversedTransactions.forEach(item => {
@@ -398,5 +393,107 @@ function renderHabitsGrid(habits) {
         });
 
         gridContainer.appendChild(card);
+    });
+}
+
+// Library Page Logic
+async function loadLibraryPage() {
+    try {
+        const response = await fetch('data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.library) {
+            // Initial render
+            renderLibrary(data.library);
+            setupLibraryFilters(data.library);
+        }
+    } catch (error) {
+        console.error('Error loading library data:', error);
+        const grid = document.getElementById('library-grid');
+        if (grid) grid.innerHTML = '<div class="text-center text-muted p-4 col-span-full">Failed to load library.</div>';
+    }
+}
+
+function renderLibrary(items) {
+    const grid = document.getElementById('library-grid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    if (items.length === 0) {
+        grid.innerHTML = '<div class="text-center text-muted p-4 col-span-full">No items found.</div>';
+        return;
+    }
+
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'library-card';
+
+        const img = document.createElement('img');
+        img.src = item.cover;
+        img.alt = item.title;
+        img.className = 'library-cover';
+
+        const content = document.createElement('div');
+        content.className = 'library-content';
+
+        const title = document.createElement('div');
+        title.className = 'library-title';
+        title.textContent = item.title;
+        title.title = item.title; // Tooltip for overflow
+
+        const author = document.createElement('div');
+        author.className = 'library-author';
+        author.textContent = item.author;
+
+        const rating = document.createElement('div');
+        rating.className = 'library-rating';
+        rating.innerHTML = getStarRating(item.rating);
+
+        content.appendChild(title);
+        content.appendChild(author);
+        content.appendChild(rating);
+
+        card.appendChild(img);
+        card.appendChild(content);
+
+        grid.appendChild(card);
+    });
+}
+
+function getStarRating(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<i class="ri-star-fill"></i>';
+        } else {
+            stars += '<i class="ri-star-line"></i>';
+        }
+    }
+    return stars;
+}
+
+function setupLibraryFilters(allItems) {
+    const buttons = document.querySelectorAll('.filter-btn');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update Active State
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Filter Data
+            const filter = btn.getAttribute('data-filter');
+
+            if (filter === 'all') {
+                renderLibrary(allItems);
+            } else {
+                const filteredItems = allItems.filter(item => item.type === filter);
+                renderLibrary(filteredItems);
+            }
+        });
     });
 }

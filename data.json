@@ -42,5 +42,39 @@
       "icon": "ri-mental-health-line",
       "status": true
     }
+  ],
+  "library": [
+    {
+      "id": 1,
+      "title": "The Boron Letters",
+      "author": "Gary Halbert",
+      "type": "book",
+      "rating": 5,
+      "cover": "https://placehold.co/200x300/18181b/FFF?text=Boron"
+    },
+    {
+      "id": 2,
+      "title": "Atomic Habits",
+      "author": "James Clear",
+      "type": "book",
+      "rating": 5,
+      "cover": "https://placehold.co/200x300/18181b/FFF?text=Atomic"
+    },
+    {
+      "id": 3,
+      "title": "Inception",
+      "author": "Christopher Nolan",
+      "type": "movie",
+      "rating": 5,
+      "cover": "https://placehold.co/200x300/18181b/FFF?text=Inception"
+    },
+    {
+      "id": 4,
+      "title": "The Matrix",
+      "author": "The Wachowskis",
+      "type": "movie",
+      "rating": 4,
+      "cover": "https://placehold.co/200x300/18181b/FFF?text=Matrix"
+    }
   ]
 }
