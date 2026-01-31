@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLibraryPage();
     } else {
         // Default dashboard fetch
-        fetchData();
+        loadDashboard();
     }
 });
 
@@ -94,28 +94,101 @@ function renderSidebar() {
     }
 }
 
-async function fetchData() {
+async function loadDashboard() {
+    // 1. Greeting
     try {
         const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+                updateGreeting(data.user.name);
+            }
 
-        if (data.user) {
-            updateGreeting(data.user.name);
-        }
+            // 2. Habits Logic
+            if (data.habits) {
+                let totalHabits = data.habits.length;
+                let completedCount = 0;
 
-        if (data.habits) {
-            renderHabits(data.habits);
-        }
+                data.habits.forEach(habit => {
+                    if (localStorage.getItem('habit_' + habit.id) === 'true') {
+                        completedCount++;
+                    }
+                });
 
+                const countText = document.getElementById('habit-count-text');
+                const message = document.getElementById('habit-message');
+                const fill = document.getElementById('habit-progress-fill');
+
+                if (countText && fill) {
+                    countText.textContent = `${completedCount} of ${totalHabits} Completed`;
+                    const percentage = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0;
+                    fill.style.width = `${percentage}%`;
+
+                    if (percentage === 100 && message) {
+                        message.textContent = "Great Job! 🎉";
+                        message.classList.add('text-success');
+                    } else if (message) {
+                        message.textContent = "";
+                    }
+                }
+            }
+
+            // 3. Finance Logic (Dashboard Summary)
+            if (data.finance) {
+                let allTransactions = [...data.finance];
+                const localTransactionsStr = localStorage.getItem('user_transactions');
+                if (localTransactionsStr) {
+                    try {
+                        const localTransactions = JSON.parse(localTransactionsStr);
+                        if (Array.isArray(localTransactions)) {
+                            allTransactions = [...allTransactions, ...localTransactions];
+                        }
+                    } catch (e) {
+                        console.error("Error parsing user transactions", e);
+                    }
+                }
+
+                const MONTHLY_BUDGET = 2500;
+                const expenses = allTransactions.filter(item => item.type.toLowerCase() === 'expense');
+                const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+                const remaining = MONTHLY_BUDGET - totalBurn;
+
+                const budgetEl = document.getElementById('dashboard-budget');
+                const spentEl = document.getElementById('dashboard-spent');
+                const remainingEl = document.getElementById('dashboard-remaining');
+
+                const formatter = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                });
+
+                if (budgetEl) budgetEl.textContent = formatter.format(MONTHLY_BUDGET);
+                if (spentEl) spentEl.textContent = formatter.format(totalBurn);
+                if (remainingEl) {
+                    remainingEl.textContent = formatter.format(remaining);
+                    if (remaining < 0) {
+                        remainingEl.className = 'text-danger';
+                    } else {
+                        remainingEl.className = 'text-success';
+                    }
+                }
+            }
+        }
     } catch (error) {
-        console.error('Error fetching data:', error);
-        const greetingElement = document.getElementById('greeting');
-        if (greetingElement) {
-            greetingElement.textContent = "Welcome, Traveler";
+        console.error('Error loading dashboard data:', error);
+    }
+
+    // 4. Quick Note Logic
+    const noteArea = document.getElementById('dashboard-note');
+    if (noteArea) {
+        const savedNote = localStorage.getItem('quick_note');
+        if (savedNote) {
+            noteArea.value = savedNote;
         }
+
+        noteArea.addEventListener('input', () => {
+            localStorage.setItem('quick_note', noteArea.value);
+        });
     }
 }
 
@@ -135,34 +208,6 @@ function updateGreeting(name) {
     }
 
     greetingElement.textContent = `${greetingText}, ${name}`;
-}
-
-function renderHabits(habits) {
-    const habitsContainer = document.getElementById('habits-list');
-    if (!habitsContainer) return;
-
-    habitsContainer.innerHTML = '';
-
-    habits.forEach(habit => {
-        const isCompleted = localStorage.getItem('habit_' + habit.id) === 'true';
-
-        const li = document.createElement('li');
-        li.className = 'habit-item';
-
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = habit.name;
-
-        const statusIcon = document.createElement('i');
-        if (isCompleted) {
-            statusIcon.className = 'ri-checkbox-circle-fill habit-check';
-        } else {
-            statusIcon.className = 'ri-checkbox-blank-circle-line habit-check inactive';
-        }
-
-        li.appendChild(nameSpan);
-        li.appendChild(statusIcon);
-        habitsContainer.appendChild(li);
-    });
 }
 
 // Finance Page Logic
