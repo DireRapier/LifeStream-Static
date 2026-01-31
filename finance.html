@@ -8,24 +8,20 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">LifeStream</div>
-        <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="finance.html" class="active">Finance</a>
-            <a href="habits.html">Habits</a>
-            <a href="settings.html">Settings</a>
-        </div>
-    </nav>
+    <div class="dashboard-layout">
+        <aside id="sidebar-container"></aside>
+        <main class="content">
+            <div class="container placeholder-container">
+                <i class="ri-money-dollar-circle-line placeholder-icon"></i>
+                <h1>Finance Dashboard</h1>
+                <p class="text-muted mt-4">Detailed financial tracking coming soon.</p>
+            </div>
 
-    <div class="container placeholder-container">
-        <i class="ri-money-dollar-circle-line placeholder-icon"></i>
-        <h1>Finance Dashboard</h1>
-        <p class="text-muted mt-4">Detailed financial tracking coming soon.</p>
+            <footer>
+                <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
+            </footer>
+        </main>
     </div>
-
-    <footer>
-        <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
-    </footer>
+    <script src="script.js"></script>
 </body>
 </html>

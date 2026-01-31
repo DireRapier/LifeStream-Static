@@ -8,61 +8,55 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">LifeStream</div>
-        <div class="nav-links">
-            <a href="index.html" class="active">Home</a>
-            <a href="finance.html">Finance</a>
-            <a href="habits.html">Habits</a>
-            <a href="settings.html">Settings</a>
-        </div>
-    </nav>
+    <div class="dashboard-layout">
+        <aside id="sidebar-container"></aside>
+        <main class="content">
+            <div class="container">
+                <header class="hero">
+                    <h1 id="greeting">Welcome, Traveler</h1>
+                    <p class="text-muted mt-2">Here is your daily snapshot.</p>
+                </header>
 
-    <div class="container">
-        <header class="hero">
-            <h1 id="greeting">Welcome, Traveler</h1>
-            <p class="text-muted mt-2">Here is your daily snapshot.</p>
-        </header>
+                <div class="grid-container">
+                    <!-- Card 1: Finance -->
+                    <div class="card">
+                        <h2><i class="ri-money-dollar-circle-line align-middle mr-2"></i>Monthly Spend</h2>
+                        <div class="finance-item">
+                            <span>Total Budget</span>
+                            <span>$2,500</span>
+                        </div>
+                        <div class="finance-item">
+                            <span>Spent</span>
+                            <span class="text-danger">$1,850</span>
+                        </div>
+                        <div class="finance-item">
+                            <span>Remaining</span>
+                            <span class="text-success">$650</span>
+                        </div>
+                    </div>
 
-        <div class="grid-container">
-            <!-- Card 1: Finance -->
-            <div class="card">
-                <h2><i class="ri-money-dollar-circle-line align-middle mr-2"></i>Monthly Spend</h2>
-                <div class="finance-item">
-                    <span>Total Budget</span>
-                    <span>$2,500</span>
+                    <!-- Card 2: Habits -->
+                    <div class="card">
+                        <h2><i class="ri-checkbox-circle-line align-middle mr-2"></i>Today's Focus</h2>
+                        <ul id="habits-list">
+                            <!-- Dynamic Content will be inserted here -->
+                            <li class="text-muted text-center p-4">Loading habits...</li>
+                        </ul>
+                    </div>
+
+                    <!-- Card 3: Quick Note -->
+                    <div class="card">
+                        <h2><i class="ri-sticky-note-line align-middle mr-2"></i>Quick Note</h2>
+                        <textarea class="note-area" placeholder="Jot down a thought..."></textarea>
+                    </div>
                 </div>
-                <div class="finance-item">
-                    <span>Spent</span>
-                    <span class="text-danger">$1,850</span>
-                </div>
-                <div class="finance-item">
-                    <span>Remaining</span>
-                    <span class="text-success">$650</span>
-                </div>
-            </div>
 
-            <!-- Card 2: Habits -->
-            <div class="card">
-                <h2><i class="ri-checkbox-circle-line align-middle mr-2"></i>Today's Focus</h2>
-                <ul id="habits-list">
-                    <!-- Dynamic Content will be inserted here -->
-                    <li class="text-muted text-center p-4">Loading habits...</li>
-                </ul>
+                <footer>
+                    <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
+                </footer>
             </div>
-
-            <!-- Card 3: Quick Note -->
-            <div class="card">
-                <h2><i class="ri-sticky-note-line align-middle mr-2"></i>Quick Note</h2>
-                <textarea class="note-area" placeholder="Jot down a thought..."></textarea>
-            </div>
-        </div>
+        </main>
     </div>
-
-    <footer>
-        <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
-    </footer>
-
     <script src="script.js"></script>
 </body>
 </html>
