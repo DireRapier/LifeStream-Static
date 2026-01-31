@@ -1,15 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     renderSidebar();
 
-    // Determine which data load function to call based on page
+    // Determine which page logic to load
     const path = window.location.pathname;
     if (path.includes('finance.html')) {
         loadFinancePage();
         setupFinanceModal();
     } else if (path.includes('habits.html')) {
         loadHabitsPage();
+        setupHabitModal();
     } else if (path.includes('library.html')) {
         loadLibraryPage();
+        setupLibraryModal();
     } else if (path.includes('settings.html')) {
         loadSettingsPage();
     } else {
@@ -17,6 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
         loadDashboard();
     }
 });
+
+// --- GLOBAL UTILITIES ---
+
+function getCollection(key) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+}
+
+function saveCollection(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getTodayString() {
+    return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format is stable
+}
+
+// --- SHARED UI LOGIC ---
 
 function renderSidebar() {
     const sidebarContainer = document.getElementById('sidebar-container');
@@ -96,104 +115,6 @@ function renderSidebar() {
     }
 }
 
-async function loadDashboard() {
-    // 1. Greeting
-    try {
-        const response = await fetch('data.json');
-        if (response.ok) {
-            const data = await response.json();
-            if (data.user) {
-                updateGreeting(data.user.name);
-            }
-
-            // 2. Habits Logic
-            if (data.habits) {
-                let totalHabits = data.habits.length;
-                let completedCount = 0;
-
-                data.habits.forEach(habit => {
-                    if (localStorage.getItem('habit_' + habit.id) === 'true') {
-                        completedCount++;
-                    }
-                });
-
-                const countText = document.getElementById('habit-count-text');
-                const message = document.getElementById('habit-message');
-                const fill = document.getElementById('habit-progress-fill');
-
-                if (countText && fill) {
-                    countText.textContent = `${completedCount} of ${totalHabits} Completed`;
-                    const percentage = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0;
-                    fill.style.width = `${percentage}%`;
-
-                    if (percentage === 100 && message) {
-                        message.textContent = "Great Job! 🎉";
-                        message.classList.add('text-success');
-                    } else if (message) {
-                        message.textContent = "";
-                    }
-                }
-            }
-
-            // 3. Finance Logic (Dashboard Summary)
-            if (data.finance) {
-                let allTransactions = [...data.finance];
-                const localTransactionsStr = localStorage.getItem('user_transactions');
-                if (localTransactionsStr) {
-                    try {
-                        const localTransactions = JSON.parse(localTransactionsStr);
-                        if (Array.isArray(localTransactions)) {
-                            allTransactions = [...allTransactions, ...localTransactions];
-                        }
-                    } catch (e) {
-                        console.error("Error parsing user transactions", e);
-                    }
-                }
-
-                const MONTHLY_BUDGET = 2500;
-                const expenses = allTransactions.filter(item => item.type.toLowerCase() === 'expense');
-                const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
-                const remaining = MONTHLY_BUDGET - totalBurn;
-
-                const budgetEl = document.getElementById('dashboard-budget');
-                const spentEl = document.getElementById('dashboard-spent');
-                const remainingEl = document.getElementById('dashboard-remaining');
-
-                const formatter = new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                });
-
-                if (budgetEl) budgetEl.textContent = formatter.format(MONTHLY_BUDGET);
-                if (spentEl) spentEl.textContent = formatter.format(totalBurn);
-                if (remainingEl) {
-                    remainingEl.textContent = formatter.format(remaining);
-                    if (remaining < 0) {
-                        remainingEl.className = 'text-danger';
-                    } else {
-                        remainingEl.className = 'text-success';
-                    }
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error loading dashboard data:', error);
-    }
-
-    // 4. Quick Note Logic
-    const noteArea = document.getElementById('dashboard-note');
-    if (noteArea) {
-        const savedNote = localStorage.getItem('quick_note');
-        if (savedNote) {
-            noteArea.value = savedNote;
-        }
-
-        noteArea.addEventListener('input', () => {
-            localStorage.setItem('quick_note', noteArea.value);
-        });
-    }
-}
-
 function updateGreeting(name) {
     const greetingElement = document.getElementById('greeting');
     if (!greetingElement) return;
@@ -212,54 +133,99 @@ function updateGreeting(name) {
     greetingElement.textContent = `${greetingText}, ${name}`;
 }
 
-// Finance Page Logic
-async function loadFinancePage() {
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+// --- DASHBOARD LOGIC ---
+
+function loadDashboard() {
+    updateGreeting("Traveler"); // Default name since user config is removed
+
+    // 1. Habits Logic (Progress)
+    const habits = getCollection('habits');
+    const totalHabits = habits.length;
+    let completedCount = 0;
+    const today = getTodayString();
+
+    habits.forEach(habit => {
+        if (habit.completedDates && habit.completedDates.includes(today)) {
+            completedCount++;
         }
-        const data = await response.json();
+    });
 
-        let allTransactions = [];
+    const countText = document.getElementById('habit-count-text');
+    const message = document.getElementById('habit-message');
+    const fill = document.getElementById('habit-progress-fill');
 
-        if (data.finance) {
-            allTransactions = [...data.finance];
+    if (countText && fill) {
+        countText.textContent = `${completedCount} of ${totalHabits} Completed`;
+        const percentage = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0;
+        fill.style.width = `${percentage}%`;
+
+        if (percentage === 100 && totalHabits > 0 && message) {
+            message.textContent = "Great Job! 🎉";
+            message.classList.add('text-success');
+        } else if (message) {
+            message.textContent = "";
         }
-
-        // Merge with LocalStorage transactions
-        const localTransactionsStr = localStorage.getItem('user_transactions');
-        if (localTransactionsStr) {
-            try {
-                const localTransactions = JSON.parse(localTransactionsStr);
-                if (Array.isArray(localTransactions)) {
-                    allTransactions = [...allTransactions, ...localTransactions];
-                }
-            } catch (e) {
-                console.error("Error parsing user transactions", e);
-            }
-        }
-
-        // 1. Calculate Total Monthly Burn (Expenses only)
-        const expenses = allTransactions.filter(item => item.type.toLowerCase() === 'expense');
-        const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
-
-        const burnElement = document.getElementById('total-burn');
-        if (burnElement) {
-            burnElement.textContent = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(totalBurn);
-        }
-
-        // 2. Render Transaction List
-        renderTransactionList(allTransactions);
-
-    } catch (error) {
-        console.error('Error loading finance data:', error);
-        const burnElement = document.getElementById('total-burn');
-        if (burnElement) burnElement.textContent = "$--.--";
     }
+
+    // 2. Finance Logic (Summary)
+    const transactions = getCollection('finance');
+    const MONTHLY_BUDGET = 2500;
+    const expenses = transactions.filter(item => item.type.toLowerCase() === 'expense');
+    const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+    const remaining = MONTHLY_BUDGET - totalBurn;
+
+    const budgetEl = document.getElementById('dashboard-budget');
+    const spentEl = document.getElementById('dashboard-spent');
+    const remainingEl = document.getElementById('dashboard-remaining');
+
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    });
+
+    if (budgetEl) budgetEl.textContent = formatter.format(MONTHLY_BUDGET);
+    if (spentEl) spentEl.textContent = formatter.format(totalBurn);
+    if (remainingEl) {
+        remainingEl.textContent = formatter.format(remaining);
+        if (remaining < 0) {
+            remainingEl.className = 'text-danger';
+        } else {
+            remainingEl.className = 'text-success';
+        }
+    }
+
+    // 3. Quick Note Logic
+    const noteArea = document.getElementById('dashboard-note');
+    if (noteArea) {
+        const savedNote = localStorage.getItem('quick_note');
+        if (savedNote) {
+            noteArea.value = savedNote;
+        }
+        noteArea.addEventListener('input', () => {
+            localStorage.setItem('quick_note', noteArea.value);
+        });
+    }
+}
+
+// --- FINANCE PAGE LOGIC ---
+
+function loadFinancePage() {
+    const transactions = getCollection('finance');
+
+    // 1. Calculate Total Monthly Burn
+    const expenses = transactions.filter(item => item.type.toLowerCase() === 'expense');
+    const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+
+    const burnElement = document.getElementById('total-burn');
+    if (burnElement) {
+        burnElement.textContent = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(totalBurn);
+    }
+
+    // 2. Render Transaction List
+    renderTransactionList(transactions);
 }
 
 function renderTransactionList(transactions) {
@@ -268,6 +234,12 @@ function renderTransactionList(transactions) {
 
     listContainer.innerHTML = '';
 
+    if (transactions.length === 0) {
+        listContainer.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">No transactions yet. Add one to start.</td></tr>';
+        return;
+    }
+
+    // Reverse to show newest first
     const reversedTransactions = [...transactions].reverse();
 
     reversedTransactions.forEach(item => {
@@ -290,7 +262,6 @@ function renderTransactionList(transactions) {
         const costTd = document.createElement('td');
         const isIncome = item.type.toLowerCase() === 'income';
         const amountClass = isIncome ? 'text-success' : '';
-
         costTd.className = `text-right amount-cell ${amountClass}`;
 
         let formattedCost = new Intl.NumberFormat('en-US', {
@@ -298,16 +269,23 @@ function renderTransactionList(transactions) {
             currency: 'USD'
         }).format(item.amount);
 
-        if (isIncome) {
-            formattedCost = '+' + formattedCost;
-        }
-
+        if (isIncome) formattedCost = '+' + formattedCost;
         costTd.textContent = formattedCost;
+
+        // Delete Button
+        const actionTd = document.createElement('td');
+        actionTd.className = 'text-right';
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-icon-sm text-danger';
+        deleteBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
+        deleteBtn.onclick = () => deleteTransaction(item.id);
+        actionTd.appendChild(deleteBtn);
 
         tr.appendChild(iconTd);
         tr.appendChild(nameTd);
         tr.appendChild(catTd);
         tr.appendChild(costTd);
+        tr.appendChild(actionTd);
 
         listContainer.appendChild(tr);
     });
@@ -321,85 +299,52 @@ function setupFinanceModal() {
 
     if (!addBtn || !modal || !closeBtn || !form) return;
 
-    addBtn.addEventListener('click', () => {
-        modal.classList.add('active');
-    });
-
-    closeBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-    });
-
-    // Close on backdrop click
+    addBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
+        if (e.target === modal) modal.classList.remove('active');
     });
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        handleAddTransaction(form, modal);
+
+        const name = document.getElementById('transaction-name').value;
+        const amount = parseFloat(document.getElementById('transaction-amount').value);
+        const type = document.getElementById('transaction-type').value;
+
+        if (!name || isNaN(amount)) return;
+
+        const newTransaction = {
+            id: Date.now(),
+            name,
+            amount,
+            type
+        };
+
+        const transactions = getCollection('finance');
+        transactions.push(newTransaction);
+        saveCollection('finance', transactions);
+
+        form.reset();
+        modal.classList.remove('active');
+        loadFinancePage();
     });
 }
 
-function handleAddTransaction(form, modal) {
-    const nameInput = document.getElementById('transaction-name');
-    const amountInput = document.getElementById('transaction-amount');
-    const typeInput = document.getElementById('transaction-type');
-
-    if (!nameInput || !amountInput || !typeInput) return;
-
-    const name = nameInput.value;
-    const amount = parseFloat(amountInput.value);
-    const type = typeInput.value;
-
-    if (!name || isNaN(amount)) return;
-
-    const newTransaction = {
-        id: Date.now(),
-        name: name,
-        amount: amount,
-        type: type
-    };
-
-    // Save to LocalStorage
-    const localTransactionsStr = localStorage.getItem('user_transactions');
-    let localTransactions = [];
-    if (localTransactionsStr) {
-        try {
-            localTransactions = JSON.parse(localTransactionsStr);
-            if (!Array.isArray(localTransactions)) localTransactions = [];
-        } catch (e) {
-            localTransactions = [];
-        }
+function deleteTransaction(id) {
+    if (confirm("Delete this transaction?")) {
+        let transactions = getCollection('finance');
+        transactions = transactions.filter(t => t.id !== id);
+        saveCollection('finance', transactions);
+        loadFinancePage();
     }
-
-    localTransactions.push(newTransaction);
-    localStorage.setItem('user_transactions', JSON.stringify(localTransactions));
-
-    // Reset and Close
-    form.reset();
-    modal.classList.remove('active');
-
-    // Refresh UI
-    loadFinancePage();
 }
 
-// Habits Page Logic
-async function loadHabitsPage() {
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+// --- HABITS PAGE LOGIC ---
 
-        if (data.habits) {
-            renderHabitsGrid(data.habits);
-        }
-    } catch (error) {
-        console.error('Error loading habits data:', error);
-    }
+function loadHabitsPage() {
+    const habits = getCollection('habits');
+    renderHabitsGrid(habits);
 }
 
 function renderHabitsGrid(habits) {
@@ -408,14 +353,34 @@ function renderHabitsGrid(habits) {
 
     gridContainer.innerHTML = '';
 
+    if (habits.length === 0) {
+        gridContainer.innerHTML = '<div class="text-center text-muted p-4 col-span-full">No habits yet. Create one!</div>';
+        return;
+    }
+
+    const today = getTodayString();
+
     habits.forEach(habit => {
         const card = document.createElement('div');
         card.className = 'habit-card';
+        card.style.position = 'relative'; // For delete button positioning
 
-        const isCompleted = localStorage.getItem('habit_' + habit.id) === 'true';
+        const isCompleted = habit.completedDates && habit.completedDates.includes(today);
         if (isCompleted) {
             card.classList.add('completed');
         }
+
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-icon-sm text-muted';
+        deleteBtn.style.position = 'absolute';
+        deleteBtn.style.top = '10px';
+        deleteBtn.style.right = '10px';
+        deleteBtn.innerHTML = '<i class="ri-close-line"></i>';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation(); // Prevent card click
+            deleteHabit(habit.id);
+        };
 
         const icon = document.createElement('i');
         icon.className = habit.icon || 'ri-checkbox-circle-line';
@@ -423,19 +388,26 @@ function renderHabitsGrid(habits) {
         const name = document.createElement('h3');
         name.textContent = habit.name;
 
+        card.appendChild(deleteBtn);
         card.appendChild(icon);
         card.appendChild(name);
 
+        // Toggle Logic
         card.addEventListener('click', () => {
-            const currentState = card.classList.contains('completed');
-            const newState = !currentState;
+            const currentHabits = getCollection('habits');
+            const targetHabit = currentHabits.find(h => h.id === habit.id);
 
-            if (newState) {
-                card.classList.add('completed');
-                localStorage.setItem('habit_' + habit.id, 'true');
-            } else {
-                card.classList.remove('completed');
-                localStorage.setItem('habit_' + habit.id, 'false');
+            if (targetHabit) {
+                if (!targetHabit.completedDates) targetHabit.completedDates = [];
+
+                if (targetHabit.completedDates.includes(today)) {
+                    targetHabit.completedDates = targetHabit.completedDates.filter(d => d !== today);
+                    card.classList.remove('completed');
+                } else {
+                    targetHabit.completedDates.push(today);
+                    card.classList.add('completed');
+                }
+                saveCollection('habits', currentHabits);
             }
         });
 
@@ -443,25 +415,58 @@ function renderHabitsGrid(habits) {
     });
 }
 
-// Library Page Logic
-async function loadLibraryPage() {
-    try {
-        const response = await fetch('data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+function setupHabitModal() {
+    // Note: HTML setup for habit modal needs to be added in refactor step
+    const addBtn = document.getElementById('add-habit-btn');
+    const modal = document.getElementById('habit-modal');
+    const closeBtn = document.getElementById('close-habit-modal-btn');
+    const form = document.getElementById('add-habit-form');
 
-        if (data.library) {
-            // Initial render
-            renderLibrary(data.library);
-            setupLibraryFilters(data.library);
-        }
-    } catch (error) {
-        console.error('Error loading library data:', error);
-        const grid = document.getElementById('library-grid');
-        if (grid) grid.innerHTML = '<div class="text-center text-muted p-4 col-span-full">Failed to load library.</div>';
+    if (!addBtn || !modal || !closeBtn || !form) return;
+
+    addBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('habit-name').value;
+        const icon = document.getElementById('habit-icon').value || 'ri-run-line';
+
+        const newHabit = {
+            id: Date.now(),
+            name,
+            icon,
+            completedDates: []
+        };
+
+        const habits = getCollection('habits');
+        habits.push(newHabit);
+        saveCollection('habits', habits);
+
+        form.reset();
+        modal.classList.remove('active');
+        loadHabitsPage();
+    });
+}
+
+function deleteHabit(id) {
+    if (confirm("Delete this habit permanently?")) {
+        let habits = getCollection('habits');
+        habits = habits.filter(h => h.id !== id);
+        saveCollection('habits', habits);
+        loadHabitsPage();
     }
+}
+
+// --- LIBRARY PAGE LOGIC ---
+
+function loadLibraryPage() {
+    const library = getCollection('library');
+    renderLibrary(library);
+    setupLibraryFilters(library);
 }
 
 function renderLibrary(items) {
@@ -471,16 +476,32 @@ function renderLibrary(items) {
     grid.innerHTML = '';
 
     if (items.length === 0) {
-        grid.innerHTML = '<div class="text-center text-muted p-4 col-span-full">No items found.</div>';
+        grid.innerHTML = '<div class="text-center text-muted p-4 col-span-full">No items yet. Add one!</div>';
         return;
     }
 
     items.forEach(item => {
         const card = document.createElement('div');
         card.className = 'library-card';
+        card.style.position = 'relative';
+
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-icon-sm text-danger';
+        deleteBtn.style.position = 'absolute';
+        deleteBtn.style.top = '10px';
+        deleteBtn.style.right = '10px';
+        deleteBtn.style.zIndex = '10';
+        deleteBtn.style.background = 'rgba(0,0,0,0.5)';
+        deleteBtn.style.borderRadius = '50%';
+        deleteBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteLibraryItem(item.id);
+        };
 
         const img = document.createElement('img');
-        img.src = item.cover;
+        img.src = item.cover || 'https://placehold.co/200x300/18181b/FFF?text=No+Cover';
         img.alt = item.title;
         img.className = 'library-cover';
 
@@ -490,7 +511,7 @@ function renderLibrary(items) {
         const title = document.createElement('div');
         title.className = 'library-title';
         title.textContent = item.title;
-        title.title = item.title; // Tooltip for overflow
+        title.title = item.title;
 
         const author = document.createElement('div');
         author.className = 'library-author';
@@ -504,6 +525,7 @@ function renderLibrary(items) {
         content.appendChild(author);
         content.appendChild(rating);
 
+        card.appendChild(deleteBtn);
         card.appendChild(img);
         card.appendChild(content);
 
@@ -511,71 +533,74 @@ function renderLibrary(items) {
     });
 }
 
-function getStarRating(rating) {
-    let stars = '';
-    for (let i = 1; i <= 5; i++) {
-        if (i <= rating) {
-            stars += '<i class="ri-star-fill"></i>';
-        } else {
-            stars += '<i class="ri-star-line"></i>';
-        }
-    }
-    return stars;
-}
+function setupLibraryModal() {
+    const addBtn = document.getElementById('add-resource-btn');
+    const modal = document.getElementById('library-modal');
+    const closeBtn = document.getElementById('close-library-modal-btn');
+    const form = document.getElementById('add-library-form');
 
-function setupLibraryFilters(allItems) {
-    const buttons = document.querySelectorAll('.filter-btn');
+    if (!addBtn || !modal || !closeBtn || !form) return;
 
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update Active State
-            buttons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+    addBtn.addEventListener('click', () => modal.classList.add('active'));
+    closeBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+    });
 
-            // Filter Data
-            const filter = btn.getAttribute('data-filter');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
 
-            if (filter === 'all') {
-                renderLibrary(allItems);
-            } else {
-                const filteredItems = allItems.filter(item => item.type === filter);
-                renderLibrary(filteredItems);
-            }
-        });
+        const title = document.getElementById('lib-title').value;
+        const author = document.getElementById('lib-author').value;
+        const type = document.getElementById('lib-type').value;
+        const rating = parseInt(document.getElementById('lib-rating').value);
+        const cover = document.getElementById('lib-cover').value;
+
+        const newItem = {
+            id: Date.now(),
+            title,
+            author,
+            type,
+            rating,
+            cover
+        };
+
+        const library = getCollection('library');
+        library.push(newItem);
+        saveCollection('library', library);
+
+        form.reset();
+        modal.classList.remove('active');
+        loadLibraryPage();
     });
 }
 
-// Settings Page Logic
+function deleteLibraryItem(id) {
+    if (confirm("Delete this item?")) {
+        let library = getCollection('library');
+        library = library.filter(i => i.id !== id);
+        saveCollection('library', library);
+        loadLibraryPage();
+    }
+}
+
+// --- SETTINGS LOGIC ---
+
 function loadSettingsPage() {
     const exportBtn = document.getElementById('export-btn');
     const importBtn = document.getElementById('import-btn');
     const importInput = document.getElementById('import-input');
     const resetBtn = document.getElementById('reset-btn');
 
-    // Export Logic
     if (exportBtn) {
         exportBtn.addEventListener('click', () => {
-            const backupData = {};
+            const backupData = {
+                finance: getCollection('finance'),
+                habits: getCollection('habits'),
+                library: getCollection('library'),
+                quick_note: localStorage.getItem('quick_note')
+            };
 
-            // Collect User Transactions
-            const transactions = localStorage.getItem('user_transactions');
-            if (transactions) {
-                backupData.user_transactions = JSON.parse(transactions);
-            }
-
-            // Collect Quick Note
-            const note = localStorage.getItem('quick_note');
-            if (note) {
-                backupData.quick_note = note;
-            }
-
-            // Collect Habit States
-            const habitKeys = Object.keys(localStorage).filter(key => key.startsWith('habit_'));
-            habitKeys.forEach(key => {
-                backupData[key] = localStorage.getItem(key);
-            });
-
-            // Create Download
             const dataStr = JSON.stringify(backupData, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -590,11 +615,8 @@ function loadSettingsPage() {
         });
     }
 
-    // Import Logic
     if (importBtn && importInput) {
-        importBtn.addEventListener('click', () => {
-            importInput.click();
-        });
+        importBtn.addEventListener('click', () => importInput.click());
 
         importInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -605,34 +627,22 @@ function loadSettingsPage() {
                 try {
                     const data = JSON.parse(event.target.result);
 
-                    // Restore Data
-                    if (data.user_transactions) {
-                        localStorage.setItem('user_transactions', JSON.stringify(data.user_transactions));
-                    }
-                    if (data.quick_note) {
-                        localStorage.setItem('quick_note', data.quick_note);
-                    }
-
-                    // Restore Habits
-                    Object.keys(data).forEach(key => {
-                        if (key.startsWith('habit_')) {
-                            localStorage.setItem(key, data[key]);
-                        }
-                    });
+                    if (data.finance) saveCollection('finance', data.finance);
+                    if (data.habits) saveCollection('habits', data.habits);
+                    if (data.library) saveCollection('library', data.library);
+                    if (data.quick_note) localStorage.setItem('quick_note', data.quick_note);
 
                     alert('Data Restored Successfully!');
                     location.reload();
-
                 } catch (err) {
-                    console.error('Error parsing backup file:', err);
-                    alert('Failed to restore data. Invalid file.');
+                    console.error(err);
+                    alert('Invalid backup file.');
                 }
             };
             reader.readAsText(file);
         });
     }
 
-    // Reset Logic
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             if (confirm("Are you sure? This will wipe all your data permanently.")) {
@@ -642,4 +652,29 @@ function loadSettingsPage() {
             }
         });
     }
+}
+
+// Helper Functions
+function getStarRating(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += i <= rating ? '<i class="ri-star-fill"></i>' : '<i class="ri-star-line"></i>';
+    }
+    return stars;
+}
+
+function setupLibraryFilters(allItems) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.getAttribute('data-filter');
+            if (filter === 'all') {
+                renderLibrary(allItems);
+            } else {
+                renderLibrary(allItems.filter(item => item.type === filter));
+            }
+        });
+    });
 }

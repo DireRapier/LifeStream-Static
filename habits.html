@@ -12,9 +12,14 @@
         <aside id="sidebar-container"></aside>
         <main class="content">
             <div class="container">
-                <header class="hero">
-                    <h1>Habit Tracker</h1>
-                    <p class="text-muted mt-2">Build your streaks daily.</p>
+                <header class="hero flex-between mb-lg">
+                    <div>
+                        <h1>Habit Tracker</h1>
+                        <p class="text-muted mt-2">Build your streaks daily.</p>
+                    </div>
+                    <button id="add-habit-btn" class="btn-primary">
+                        <i class="ri-add-line"></i> New Habit
+                    </button>
                 </header>
 
                 <div id="habits-grid" class="habits-grid">
@@ -28,6 +33,31 @@
             </footer>
         </main>
     </div>
+
+    <!-- Habit Modal -->
+    <div id="habit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Habit</h3>
+                <button id="close-habit-modal-btn" class="close-btn">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="add-habit-form">
+                <div class="form-group">
+                    <label for="habit-name">Habit Name</label>
+                    <input type="text" id="habit-name" name="name" placeholder="e.g. Drink Water" required>
+                </div>
+                <div class="form-group">
+                    <label for="habit-icon">Icon Class (Remixicon)</label>
+                    <input type="text" id="habit-icon" name="icon" placeholder="e.g. ri-cup-line" required>
+                    <a href="https://remixicon.com" target="_blank" class="text-sm text-accent mt-1" style="display:inline-block">Search Icons</a>
+                </div>
+                <button type="submit" class="btn-primary w-full mt-4">Create Habit</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

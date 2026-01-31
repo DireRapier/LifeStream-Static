@@ -12,9 +12,14 @@
         <aside id="sidebar-container"></aside>
         <main class="content">
             <div class="container">
-                <header class="hero">
-                    <h1>Library</h1>
-                    <p class="text-muted mt-2">Reading list and resources.</p>
+                <header class="hero flex-between mb-lg">
+                    <div>
+                        <h1>Library</h1>
+                        <p class="text-muted mt-2">Reading list and resources.</p>
+                    </div>
+                    <button id="add-resource-btn" class="btn-primary">
+                        <i class="ri-add-line"></i> Add Resource
+                    </button>
                 </header>
 
                 <!-- Filter Bar -->
@@ -36,6 +41,45 @@
             </footer>
         </main>
     </div>
+
+    <!-- Library Modal -->
+    <div id="library-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Resource</h3>
+                <button id="close-library-modal-btn" class="close-btn">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="add-library-form">
+                <div class="form-group">
+                    <label for="lib-title">Title</label>
+                    <input type="text" id="lib-title" name="title" placeholder="e.g. Atomic Habits" required>
+                </div>
+                <div class="form-group">
+                    <label for="lib-author">Author/Director</label>
+                    <input type="text" id="lib-author" name="author" placeholder="e.g. James Clear" required>
+                </div>
+                <div class="form-group">
+                    <label for="lib-type">Type</label>
+                    <select id="lib-type" name="type">
+                        <option value="book">Book</option>
+                        <option value="movie">Movie</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lib-rating">Rating (1-5)</label>
+                    <input type="number" id="lib-rating" name="rating" min="1" max="5" value="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="lib-cover">Cover Image URL</label>
+                    <input type="text" id="lib-cover" name="cover" placeholder="https://..." required>
+                </div>
+                <button type="submit" class="btn-primary w-full mt-4">Add Resource</button>
+            </form>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

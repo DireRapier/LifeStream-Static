@@ -309,6 +309,7 @@ ul {
   align-items: center;
   justify-content: center;
   gap: 1rem;
+  position: relative; /* For delete button positioning */
 }
 
 .habit-card:hover {
@@ -351,6 +352,7 @@ ul {
   overflow: hidden;
   transition: transform var(--transition-speed), box-shadow var(--transition-speed);
   border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative; /* For delete button positioning */
 }
 
 .library-card:hover {
@@ -569,6 +571,24 @@ ul {
 .btn-danger:hover {
   background-color: var(--text-danger);
   color: white;
+}
+
+.btn-icon-sm {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-sm:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
 }
 
 /* Utility Classes */
