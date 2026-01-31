@@ -224,7 +224,7 @@ ul {
 .burn-amount {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--text-color); /* Could be red if needed, but white is cleaner */
+  color: var(--text-color);
 }
 
 /* Table Styles */
@@ -248,7 +248,7 @@ ul {
 
 .transaction-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Lighter/Transparent White */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   vertical-align: middle;
 }
 
@@ -272,6 +272,55 @@ ul {
   color: #3b82f6;
 }
 
+/* Habits Page Styles */
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.habit-card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.habit-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.habit-card i {
+  font-size: 3rem;
+  color: var(--text-muted);
+  transition: color var(--transition-speed);
+}
+
+.habit-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Active/Done State */
+.habit-card.completed {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.habit-card.completed i {
+  color: var(--accent-color);
+}
+
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
@@ -280,17 +329,24 @@ ul {
 .text-danger { color: var(--text-danger); }
 .text-success { color: var(--text-success); }
 .text-accent { color: var(--accent-color); }
+.text-lg { font-size: 1.25rem; }
+.text-xl { font-size: 1.5rem; }
 
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-4 { margin-top: 1rem; }
 .mt-5 { margin-top: 5rem; }
+.mb-lg { margin-bottom: 2rem; }
 
 .mr-2 { margin-right: 0.5rem; }
 
 .align-middle { vertical-align: middle; }
 
 .p-4 { padding: 1rem; }
+
+.w-icon { width: 50px; }
+.col-span-full { grid-column: 1 / -1; }
+.spacer-24 { width: 24px; }
 
 /* Footer */
 footer {

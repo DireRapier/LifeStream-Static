@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
     if (path.includes('finance.html')) {
         loadFinancePage();
+    } else if (path.includes('habits.html')) {
+        loadHabitsPage();
     } else {
         // Default dashboard fetch
         fetchData();
@@ -54,7 +56,7 @@ function renderSidebar() {
                 <i class="ri-menu-line"></i>
             </button>
             <div class="mobile-logo">LifeStream</div>
-            <div style="width: 24px;"></div>
+            <div class="spacer-24"></div>
         </div>
 
         <div id="overlay-backdrop" class="overlay-backdrop"></div>
@@ -139,6 +141,8 @@ function renderHabits(habits) {
     habitsContainer.innerHTML = '';
 
     habits.forEach(habit => {
+        const isCompleted = localStorage.getItem('habit_' + habit.id) === 'true';
+
         const li = document.createElement('li');
         li.className = 'habit-item';
 
@@ -146,7 +150,7 @@ function renderHabits(habits) {
         nameSpan.textContent = habit.name;
 
         const statusIcon = document.createElement('i');
-        if (habit.status) {
+        if (isCompleted) {
             statusIcon.className = 'ri-checkbox-circle-fill habit-check';
         } else {
             statusIcon.className = 'ri-checkbox-blank-circle-line habit-check inactive';
@@ -169,7 +173,6 @@ async function loadFinancePage() {
 
         if (data.finance) {
             const expenses = data.finance.filter(item => item.type.toLowerCase() === 'expense');
-            // Ensure amount is treated as number just in case
             const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
 
             const burnElement = document.getElementById('total-burn');
@@ -199,41 +202,32 @@ function renderTransactionList(transactions) {
     transactions.forEach(item => {
         const tr = document.createElement('tr');
 
-        // Icon Column
         const iconTd = document.createElement('td');
         const icon = document.createElement('i');
-        icon.className = 'ri-money-dollar-circle-line';
-        icon.style.fontSize = '1.25rem';
-        icon.style.color = 'var(--text-muted)';
+        icon.className = 'ri-money-dollar-circle-line text-lg text-muted';
+        // Removed inline styles here
         iconTd.appendChild(icon);
 
-        // Name Column
         const nameTd = document.createElement('td');
         nameTd.textContent = item.name;
 
-        // Category/Type Column
         const catTd = document.createElement('td');
         const badge = document.createElement('span');
         badge.className = 'badge';
         badge.textContent = item.type;
         catTd.appendChild(badge);
 
-        // Cost Column
         const costTd = document.createElement('td');
-
-        // Determine color based on type
         const isIncome = item.type.toLowerCase() === 'income';
-        const amountClass = isIncome ? 'text-success' : ''; // Default is white/inherit
+        const amountClass = isIncome ? 'text-success' : '';
 
         costTd.className = `text-right amount-cell ${amountClass}`;
 
-        // Format cost
         let formattedCost = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
         }).format(item.amount);
 
-        // Add + sign for income? Optional, but nice.
         if (isIncome) {
             formattedCost = '+' + formattedCost;
         }
@@ -246,5 +240,63 @@ function renderTransactionList(transactions) {
         tr.appendChild(costTd);
 
         listContainer.appendChild(tr);
+    });
+}
+
+// Habits Page Logic
+async function loadHabitsPage() {
+    try {
+        const response = await fetch('data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.habits) {
+            renderHabitsGrid(data.habits);
+        }
+    } catch (error) {
+        console.error('Error loading habits data:', error);
+    }
+}
+
+function renderHabitsGrid(habits) {
+    const gridContainer = document.getElementById('habits-grid');
+    if (!gridContainer) return;
+
+    gridContainer.innerHTML = '';
+
+    habits.forEach(habit => {
+        const card = document.createElement('div');
+        card.className = 'habit-card';
+
+        const isCompleted = localStorage.getItem('habit_' + habit.id) === 'true';
+        if (isCompleted) {
+            card.classList.add('completed');
+        }
+
+        const icon = document.createElement('i');
+        icon.className = habit.icon || 'ri-checkbox-circle-line';
+
+        const name = document.createElement('h3');
+        name.textContent = habit.name;
+
+        card.appendChild(icon);
+        card.appendChild(name);
+
+        card.addEventListener('click', () => {
+            const currentState = card.classList.contains('completed');
+            const newState = !currentState;
+
+            if (newState) {
+                card.classList.add('completed');
+                localStorage.setItem('habit_' + habit.id, 'true');
+            } else {
+                card.classList.remove('completed');
+                localStorage.setItem('habit_' + habit.id, 'false');
+            }
+        });
+
+        gridContainer.appendChild(card);
     });
 }
