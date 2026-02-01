@@ -140,7 +140,9 @@ function loadDashboard() {
 
     // 1. Finance Logic (Summary)
     const transactions = getCollection('finance');
-    const MONTHLY_BUDGET = 0; // Strictly 0 as per requirement
+    const userBudget = parseFloat(localStorage.getItem('user_budget')) || 0;
+    const MONTHLY_BUDGET = userBudget;
+
     const expenses = transactions.filter(item => item.type.toLowerCase() === 'expense');
     const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
     const remaining = MONTHLY_BUDGET - totalBurn;
@@ -154,10 +156,15 @@ function loadDashboard() {
 
         const remainingClass = remaining < 0 ? 'text-danger' : 'text-success';
 
+        let budgetDisplay = formatter.format(MONTHLY_BUDGET);
+        if (MONTHLY_BUDGET === 0) {
+            budgetDisplay = `<a href="settings.html" class="text-accent hover-underline" title="Set Budget">${budgetDisplay}</a>`;
+        }
+
         financeContainer.innerHTML = `
             <div class="finance-item">
                 <span>Total Budget</span>
-                <span id="dashboard-budget">${formatter.format(MONTHLY_BUDGET)}</span>
+                <span id="dashboard-budget">${budgetDisplay}</span>
             </div>
             <div class="finance-item">
                 <span>Spent</span>
@@ -603,6 +610,21 @@ function loadSettingsPage() {
     const importBtn = document.getElementById('import-btn');
     const importInput = document.getElementById('import-input');
     const resetBtn = document.getElementById('reset-btn');
+    const budgetInput = document.getElementById('budget-input');
+    const savePrefsBtn = document.getElementById('save-preferences-btn');
+
+    // Load Budget
+    if (budgetInput) {
+        budgetInput.value = localStorage.getItem('user_budget') || '';
+    }
+
+    // Save Budget
+    if (savePrefsBtn && budgetInput) {
+        savePrefsBtn.addEventListener('click', () => {
+            localStorage.setItem('user_budget', budgetInput.value);
+            alert('Preferences Saved!');
+        });
+    }
 
     if (exportBtn) {
         exportBtn.addEventListener('click', () => {
@@ -610,7 +632,8 @@ function loadSettingsPage() {
                 finance: getCollection('finance'),
                 habits: getCollection('habits'),
                 library: getCollection('library'),
-                quick_note: localStorage.getItem('quick_note')
+                quick_note: localStorage.getItem('quick_note'),
+                user_budget: localStorage.getItem('user_budget')
             };
 
             const dataStr = JSON.stringify(backupData, null, 2);
@@ -643,6 +666,7 @@ function loadSettingsPage() {
                     if (data.habits) saveCollection('habits', data.habits);
                     if (data.library) saveCollection('library', data.library);
                     if (data.quick_note) localStorage.setItem('quick_note', data.quick_note);
+                    if (data.user_budget) localStorage.setItem('user_budget', data.user_budget);
 
                     alert('Data Restored Successfully!');
                     location.reload();

@@ -18,6 +18,19 @@
                 </header>
 
                 <div class="grid-container">
+                    <!-- Preferences Card -->
+                    <div class="card">
+                        <h2><i class="ri-settings-3-line align-middle mr-2"></i>Preferences</h2>
+                        <div class="form-group">
+                            <label for="budget-input">Monthly Budget Goal ($)</label>
+                            <input type="number" id="budget-input" placeholder="e.g. 2500" min="0" step="50">
+                        </div>
+                        <button id="save-preferences-btn" class="btn-primary w-full">
+                            Save Preferences
+                        </button>
+                    </div>
+
+                    <!-- Data Management Card -->
                     <div class="card">
                         <h2><i class="ri-database-2-line align-middle mr-2"></i>Data Management</h2>
                         <p class="text-muted mb-4">Your data is stored locally in your browser. You can export it for backup or restore it later.</p>
