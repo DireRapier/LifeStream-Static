@@ -608,6 +608,8 @@ ul {
 .text-sm { font-size: 0.85rem; }
 .font-bold { font-weight: 700; }
 
+.hover-underline:hover { text-decoration: underline; }
+
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-4 { margin-top: 1rem; }
