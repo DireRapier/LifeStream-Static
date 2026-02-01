@@ -21,17 +21,9 @@
                     <!-- Card 1: Finance -->
                     <div class="card">
                         <h2><i class="ri-money-dollar-circle-line align-middle mr-2"></i>Monthly Spend</h2>
-                        <div class="finance-item">
-                            <span>Total Budget</span>
-                            <span id="dashboard-budget">$2,500.00</span>
-                        </div>
-                        <div class="finance-item">
-                            <span>Spent</span>
-                            <span id="dashboard-spent" class="text-danger">$0.00</span>
-                        </div>
-                        <div class="finance-item">
-                            <span>Remaining</span>
-                            <span id="dashboard-remaining" class="text-success">$2,500.00</span>
+                        <div id="dashboard-finance-container">
+                            <!-- Dynamic Rows will be inserted here -->
+                            <p class="text-muted">Loading...</p>
                         </div>
                     </div>
 
@@ -39,11 +31,7 @@
                     <div class="card">
                         <h2><i class="ri-checkbox-circle-line align-middle mr-2"></i>Today's Focus</h2>
                         <div id="dashboard-habit-progress" class="text-center p-4">
-                            <p id="habit-count-text" class="text-xl font-bold mb-4">0 of 0 Completed</p>
-                            <p id="habit-message" class="text-muted text-sm mb-4 min-h-text"></p>
-                            <div class="progress-track">
-                                <div id="habit-progress-fill" class="progress-fill" style="width: 0%"></div>
-                            </div>
+                            <!-- Dynamic Content will be inserted here -->
                         </div>
                     </div>
 
@@ -53,11 +41,11 @@
                         <textarea id="dashboard-note" class="note-area" placeholder="Jot down a thought..."></textarea>
                     </div>
                 </div>
-
-                <footer>
-                    <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
-                </footer>
             </div>
+
+            <footer>
+                <p>&copy; 2023 LifeStream. Made with <i class="ri-heart-fill"></i> by Vibe Coder.</p>
+            </footer>
         </main>
     </div>
     <script src="script.js"></script>
