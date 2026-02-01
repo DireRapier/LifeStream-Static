@@ -136,61 +136,74 @@ function updateGreeting(name) {
 // --- DASHBOARD LOGIC ---
 
 function loadDashboard() {
-    updateGreeting("Traveler"); // Default name since user config is removed
+    updateGreeting("Traveler");
 
-    // 1. Habits Logic (Progress)
-    const habits = getCollection('habits');
-    const totalHabits = habits.length;
-    let completedCount = 0;
-    const today = getTodayString();
-
-    habits.forEach(habit => {
-        if (habit.completedDates && habit.completedDates.includes(today)) {
-            completedCount++;
-        }
-    });
-
-    const countText = document.getElementById('habit-count-text');
-    const message = document.getElementById('habit-message');
-    const fill = document.getElementById('habit-progress-fill');
-
-    if (countText && fill) {
-        countText.textContent = `${completedCount} of ${totalHabits} Completed`;
-        const percentage = totalHabits > 0 ? (completedCount / totalHabits) * 100 : 0;
-        fill.style.width = `${percentage}%`;
-
-        if (percentage === 100 && totalHabits > 0 && message) {
-            message.textContent = "Great Job! 🎉";
-            message.classList.add('text-success');
-        } else if (message) {
-            message.textContent = "";
-        }
-    }
-
-    // 2. Finance Logic (Summary)
+    // 1. Finance Logic (Summary)
     const transactions = getCollection('finance');
-    const MONTHLY_BUDGET = 2500;
+    const MONTHLY_BUDGET = 0; // Strictly 0 as per requirement
     const expenses = transactions.filter(item => item.type.toLowerCase() === 'expense');
     const totalBurn = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
     const remaining = MONTHLY_BUDGET - totalBurn;
 
-    const budgetEl = document.getElementById('dashboard-budget');
-    const spentEl = document.getElementById('dashboard-spent');
-    const remainingEl = document.getElementById('dashboard-remaining');
+    const financeContainer = document.getElementById('dashboard-finance-container');
+    if (financeContainer) {
+        const formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        });
 
-    const formatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    });
+        const remainingClass = remaining < 0 ? 'text-danger' : 'text-success';
 
-    if (budgetEl) budgetEl.textContent = formatter.format(MONTHLY_BUDGET);
-    if (spentEl) spentEl.textContent = formatter.format(totalBurn);
-    if (remainingEl) {
-        remainingEl.textContent = formatter.format(remaining);
-        if (remaining < 0) {
-            remainingEl.className = 'text-danger';
+        financeContainer.innerHTML = `
+            <div class="finance-item">
+                <span>Total Budget</span>
+                <span id="dashboard-budget">${formatter.format(MONTHLY_BUDGET)}</span>
+            </div>
+            <div class="finance-item">
+                <span>Spent</span>
+                <span id="dashboard-spent" class="text-danger">${formatter.format(totalBurn)}</span>
+            </div>
+            <div class="finance-item">
+                <span>Remaining</span>
+                <span id="dashboard-remaining" class="${remainingClass}">${formatter.format(remaining)}</span>
+            </div>
+        `;
+    }
+
+    // 2. Habits Logic (Progress)
+    const habits = getCollection('habits');
+    const habitContainer = document.getElementById('dashboard-habit-progress');
+
+    if (habitContainer) {
+        if (habits.length === 0) {
+            habitContainer.innerHTML = '<p class="text-muted">No active habits.</p>';
         } else {
-            remainingEl.className = 'text-success';
+            const totalHabits = habits.length;
+            let completedCount = 0;
+            const today = getTodayString();
+
+            habits.forEach(habit => {
+                if (habit.completedDates && habit.completedDates.includes(today)) {
+                    completedCount++;
+                }
+            });
+
+            const percentage = (completedCount / totalHabits) * 100;
+            let messageText = "";
+            let messageClass = "";
+
+            if (percentage === 100) {
+                messageText = "Great Job! 🎉";
+                messageClass = "text-success";
+            }
+
+            habitContainer.innerHTML = `
+                <p id="habit-count-text" class="text-xl font-bold mb-4">${completedCount} of ${totalHabits} Completed</p>
+                <p id="habit-message" class="text-muted text-sm mb-4 min-h-text ${messageClass}">${messageText}</p>
+                <div class="progress-track">
+                    <div id="habit-progress-fill" class="progress-fill" style="width: ${percentage}%"></div>
+                </div>
+            `;
         }
     }
 
@@ -416,7 +429,6 @@ function renderHabitsGrid(habits) {
 }
 
 function setupHabitModal() {
-    // Note: HTML setup for habit modal needs to be added in refactor step
     const addBtn = document.getElementById('add-habit-btn');
     const modal = document.getElementById('habit-modal');
     const closeBtn = document.getElementById('close-habit-modal-btn');
